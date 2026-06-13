@@ -1,0 +1,13 @@
+// vitest.config.ts
+
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+	test: {
+		globals: true,
+		environment: 'node',
+		setupFiles: ['src/tests/tests-setup.ts'],
+		include: ['**/*.test.ts', '**/*.test.js'],
+		exclude: ['node_modules', 'dist'],
+	},
+});
