@@ -1,0 +1,53 @@
+// src/client/scripts/esm/game/rendering/pieces.ts
+
+/**
+ * This script renders all of our pieces on the board,
+ * including voids, and mini images.
+ */
+
+import type { Mesh } from './piecemodels.js';
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+
+import meshes from './meshes.js';
+import miniimage from './miniimage.js';
+import piecemodels from './piecemodels.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import { createRenderable } from '../../webgl/Renderable.js';
+
+// Variables ---------------------------------------------------------------------
+
+/** Opacity of ghost piece over legal move highlights. Default: 0.4 */
+const ghostOpacity: number = 0.4;
+
+// Functions -----------------------------------------------------------------------
+
+/**
+ * Renders all of our pieces on the board,
+ * including voids, and mini images, if visible.
+ */
+function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined): void {
+	piecemodels.renderAll(boardsim, mesh);
+	miniimage.render();
+}
+
+/** Renders a semi-transparent piece at the specified coordinates. */
+function renderGhostPiece(type: number, coords: Coords): void {
+	const data = meshes.QuadWorld_ColorTexture(coords, [1, 1, 1, ghostOpacity]);
+	const model = createRenderable(
+		data,
+		2,
+		'TRIANGLES',
+		'colorTexture',
+		true,
+		texturecache.getTexture(type),
+	);
+	model.render();
+}
+
+// ------------------------------------------------------------------------------
+
+export default {
+	renderPiecesInGame,
+	renderGhostPiece,
+};
