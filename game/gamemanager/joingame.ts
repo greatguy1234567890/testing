@@ -1,0 +1,37 @@
+// src/server/game/gamemanager/joingame.ts
+
+/**
+ * This script checks if a user belongs to a game, when they send the 'joingame'
+ * message, and if so, sends them the game info
+ */
+
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import gameutility from './gameutility.js';
+import liveGameValues from './liveGameValues.js';
+import { getGameBySocket } from './gamemanager.js';
+import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
+
+/**
+ * The method that fires when a client sends the 'joingame' command after refreshing the page.
+ * This should fetch any game their in and reconnect them to it.
+ * @param ws - Their new websocket
+ */
+function onJoinGame(ws: CustomWebSocket): void {
+	const servergame = getGameBySocket(ws);
+	if (!servergame) return; // They don't belong in a game, don't join them in one.
+
+	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
+	gameutility.subscribeClientToGame(servergame, ws, colorPlayingAs);
+
+	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
+	if (servergame.basegame.whosTurn === colorPlayingAs) {
+		const hadAFKTimer = servergame.match.autoAFKResignTime !== undefined;
+		cancelAutoAFKResignTimer(servergame, true);
+		if (hadAFKTimer) liveGameValues.onPlayerAFKReturn(servergame);
+	}
+	cancelDisconnectTimer(servergame.match, colorPlayingAs);
+	liveGameValues.onPlayerReconnected(servergame, colorPlayingAs);
+}
+
+export { onJoinGame };
